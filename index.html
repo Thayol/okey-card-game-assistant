@@ -1,0 +1,36 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	
+	<title>OKEY Assistant</title>
+	
+	<meta name="robots" content="noindex">
+	<meta name="description" content="Metin2 Okey Card Game assistant. Win more with your games with computer assisted intel.">
+	<meta name="author" content="Thayol">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<link rel="icon" type="image/png" href="favicon.png">
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<main-container>
+	<main-panel>
+		<panel-title>Deck</panel-title>
+		<card-container id="deck">
+		</card-container>
+	</main-panel>
+	<main-panel>
+		<panel-title>Hand</panel-title>
+		<card-container id="hand">
+		</card-container>
+	</main-panel>
+	<main-panel>
+			<button onclick="reset();">Reset</button>
+			<button onclick="document.getElementById('result').innerHTML = getPatterns();">Analize</button>
+			<br>
+			<div style="margin-top: 1.4em;" id="result">?</div>
+	</main-panel>
+</main-container>
+<script src="script.js">
+</body>
+</html>

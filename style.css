@@ -1,0 +1,148 @@
+:root {
+	--background: #121212;
+	--surface: #2c2c2c;
+	--text: #ffffff;
+	--text-disabled: #3d3d3d;
+	
+	--background-variant: #ffffff;
+	--surface-variant: #d0d0d0;
+	--text-variant: #000000;
+	
+	--primary: #a5d6a7;
+	--primary-light: #d7ffd9;
+	--primary-dark: #75a478;
+	
+	--primary-variant: #388e3c;
+	--primary-variant-light: #6abf69;
+	--primary-variant-dark: #00600f;
+	
+	--red-card: #ef9a9a;
+	--red-card-variant: #d32f2f;
+	--red-card-background: #9a0007;
+	
+	--blue-card: #90caf9;
+	--blue-card-variant: #1976d2;
+	--blue-card-background: #004ba0;
+	
+	--yellow-card: #fff59d;
+	--yellow-card-variant: #fbc02d;
+	--yellow-card-background: #c49000;
+	
+	--card-inset-shadow: #000000;
+	--card-border-color: #ffffff;
+	
+	--card-height: 70px;
+	--card-width: 55px;
+	--card-font-size: 30pt;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	font-family: "Roboto", sans-serif;
+	background-color: var(--background);
+	color: var(--text);
+}
+
+html, body {
+	padding: 0;
+	margin: 0;
+}
+
+main-container {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+main-panel {
+	display: block;
+	max-width: 550px;
+	margin: 10px auto 0 auto;
+	padding: 20px;
+	background-color: var(--surface);
+	border-radius: 5px;
+}
+
+panel-title {
+	display: block;
+	margin: 0 0 0.67em 0;
+	font-size: 2em;
+	font-weight: bold;
+}
+
+.red {
+	background-color: var(--red-card-variant);
+}
+
+.blue {
+	background-color: var(--blue-card-variant);
+}
+
+.yellow {
+	background-color: var(--yellow-card-variant);
+}
+
+.drawn-red {
+	background-color: var(--red-card);
+	color: var(--text-disabled);
+}
+
+.drawn-blue {
+	background-color: var(--blue-card);
+	color: var(--text-disabled);
+}
+
+.drawn-yellow {
+	background-color: var(--yellow-card);
+	color: var(--text-disabled);
+}
+
+card-container {
+	display: flex;
+	flex-flow: row wrap;
+	width: 100%;
+}
+
+card-container#deck {
+	justify-content: space-between;
+}
+
+okey-card {
+	transition-duration: 0.5s;
+	flex: 0 0 auto;
+	display: inline-block;
+	width: var(--card-width);
+	height: var(--card-height);
+	line-height: var(--card-height);
+	font-size: var(--card-font-size);
+	border-radius: 5px;
+	text-align: center;
+	color: var(--text-variant);
+	box-shadow: inset 0 0 50px -10px var(--card-inset-shadow), 0 0 3px 0 rgba(0, 0, 0, 0);
+	user-select: none;
+	margin: 3px;
+}
+
+okey-card[clickable] {
+	cursor: pointer;
+}
+
+okey-card:hover, okey-card:active {
+	transition-duration: 0.2s;
+}
+
+okey-card[clickable]:not([hand-full]):hover {
+	box-shadow: inset 0 0 50px -10px var(--card-inset-shadow), 0 0 3px 0 var(--card-border-color);
+}
+
+okey-card[clickable]:not([hand-full]):active {
+	box-shadow: inset 0 0 50px -10px var(--card-inset-shadow), 0 0 3px 0 var(--card-border-color), inset 0 0 0 100px var(--primary);
+}
+
+okey-card:not([clickable]):active, okey-card[hand-full]:active {
+	transition-duration: 0.7s;
+	background-color: var(--background);
+}

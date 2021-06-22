@@ -1,0 +1,5 @@
+# Files that are not appropriate for git
+created.txt
+description.txt
+title.txt
+main.zvg
