@@ -60,6 +60,17 @@ function cardToElement(card, forDeck = false, drawn = false) {
 		element.setAttribute("clickable", "");
 	}
 	
+	if (!forDeck) {
+		if (recommendations.length > 0 ) {
+			if (recommendations[0].burnedCard && recommendations[0].burnedCard == card.id) {
+				element.classList.add("discard");
+			}
+			else if (recommendations[0].cards && recommendations[0].cards.includes(card.id)) {
+				element.classList.add("select");
+			}
+		}
+	}
+	
 	return element.outerHTML;
 }
 
@@ -136,15 +147,17 @@ function drawCard(cardId, thisHand = null, thisDeck = null) {
 	if (!isHandFull(thisHand) && thisDeck.includes(cardId)) {
 		thisDeck.splice(thisDeck.indexOf(cardId), 1);
 		thisHand.push(cardId);
-	}
 	
-	if (!handGiven) {
-		updateUI();
+		if (!handGiven) {
+			updateUI();
+		}
 	}
 }
 
 function recommend() {
-	recommendOfDepth();
+	var cardCount = Object.keys(allCards).length
+	var scale = 6;
+	recommendOfDepth(scale);
 	updateUI(true);
 }
 
@@ -179,11 +192,18 @@ function getPatterns(thisHand = null) {
 				patternName += "-" + (i + 1).toString();
 			}
 			
+			let cardIds = [];
+			for (let card of cardsByNumbers[i]) {
+				console.log(card);
+				cardIds.push(cardToId(card));
+			}
+			
 			// "i" is lagging behind, adjustment needed
 			let points = (i + 1 + sameNumberExtra)
 			patterns[patternName] = {};
 			patterns[patternName].pattern = patternName;
 			patterns[patternName].points = points;
+			patterns[patternName].cards = cardIds;
 		}
 	}
 	
@@ -219,6 +239,7 @@ function getPatterns(thisHand = null) {
 			patterns[patternName] = {};
 			patterns[patternName].pattern = patternName;
 			patterns[patternName].points = points;
+			patterns[patternName].cards = [];
 		}
 	}
 	
@@ -233,23 +254,26 @@ function getPatterns(thisHand = null) {
 function getHandPoints(hand = null) {
 	let patterns = getPatterns(hand);
 	if (patterns.length > 0) {
-		return patterns[0].points;
-	}	
+		return patterns[0];
+	}
 	
-	return 0;
+	return { pattern: "none", points: 0 };
 }
 
-function recommendOfDepth(depth = 4) {
+function recommendOfDepth(depth = 2) {
 	var t0 = performance.now();
 	
 	recommendations = [];
 	recommendThrowaway(depth);
 	let current = getHandPoints();
-	if (current > 0) {
+	if (current.points > 0) {
 		let choice = {
 			burnedCard: "CASH OUT",
 			points: current,
-			chance: 1
+			chance: 1,
+			points: current.points,
+			pattern: current.pattern,
+			cards: current.cards
 		};
 		recommendations.unshift(choice);
 	}
@@ -258,7 +282,7 @@ function recommendOfDepth(depth = 4) {
 	console.log("Took " + (t1 - t0) + " milliseconds.");
 }
 
-function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance = 1, startingFunction = true) {
+function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance = 1, firstDiscarded = null) {
 	if (thisHand == null) {
 		thisHand = hand;
 	}
@@ -282,7 +306,12 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 			let newHand = [...thisHand];
 			let newDeck = [...thisDeck];
 			
-			choices.push({ burnedCard: newHand[i], index: i });
+			let burnedCard = newHand[i];
+			if (firstDiscarded != null) {
+				burnedCard = firstDiscarded;
+			}
+			
+			choices.push({ burnedCard: burnedCard, index: i });
 			
 			newHand.splice(i, 1);
 			newHand.push(newDeck[deckIndex]);
@@ -293,21 +322,48 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 		}
 	}
 	
-	if (startingFunction) {
-		console.log(choices);
-		for (let choice of choices) {
-			let points = getHandPoints(hands[choice.index]);
-			if (points > 0) {
-				choice.points = points;
-				
-				let thisChance = 1;
-				if (thisDeck.length > 0) {
-					thisChance = chance * (1/thisDeck.length);
-				}
-				
-				choice.chance = thisChance
-				recommendations.push(choice);
+	for (let choice of choices) {
+		let result = getHandPoints(hands[choice.index]);
+		if (result.points > 0) {
+			choice.points = result.points;
+			choice.pattern = result.pattern;
+			choice.cards = result.cards;
+			
+			let thisChance = 1;
+			if (thisDeck.length > 0) {
+				thisChance = chance * (1/thisDeck.length);
 			}
+			
+			choice.chance = thisChance
+			recommendations.push(choice);
+			
+			if (depth > 0 && recommendations.length < 1) {
+				recommendThrowaway(depth - 1, hands[choice.index], decks[choice.index], thisChance, choice.burnedCard);
+			}
+		}
+	}
+	
+	if (firstDiscarded == null) {
+		recommendations = [...new Set(recommendations)];
+		recommendations.sort((a, b) => {
+			var place = 0
+			if (a.chance > b.chance) {
+				place -= 10;
+			}
+			else if (a.chance >= b.chance) {
+				place += 10;
+			}
+			if (a.points > b.points) {
+				place += 1;
+			}
+			else {
+				place -= 1;
+			}
+			return place;
+		});
+		let fewer = recommendations.filter(choice => choice.chance >= 0.01);
+		if (fewer.length > 0) {
+			recommendations = fewer;
 		}
 	}
 }
