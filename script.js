@@ -146,11 +146,11 @@ function cashOut(thisHand = null) {
 			handGiven = false;
 		}
 		
-		console.log("Recommendation: ");
-		console.log(recommendations[0]);
+		// console.log("Recommendation: ");
+		// console.log(recommendations[0]);
 		
 		if (recommendations[0].burnedCard) {
-			console.log("Discarding: " + recommendations[0].burnedCard);
+			// console.log("Discarding: " + recommendations[0].burnedCard);
 			discard(recommendations[0].burnedCard, thisHand, false);
 		}
 		else if (recommendations[0].pattern && recommendations[0].cards) {
@@ -162,12 +162,12 @@ function cashOut(thisHand = null) {
 			recommendations = [];
 			
 			for (let cardId of localCards) {
-				console.log("Redeeming: " + cardId);
+				// console.log("Redeeming: " + cardId);
 				discard(cardId, thisHand, false);
 			}
 			
 			globalPoints += localPoints;
-			console.log("Cashed out: " + (localPoints * pointsMultiplier) + " points");
+			// console.log("Cashed out: " + (localPoints * pointsMultiplier) + " points");
 		}
 		
 		if (!handGiven) {
@@ -175,7 +175,7 @@ function cashOut(thisHand = null) {
 		}
 	}
 	else {
-		console.log("Nothing to cash out.");
+		// console.log("Nothing to do.");
 	}
 }
 
