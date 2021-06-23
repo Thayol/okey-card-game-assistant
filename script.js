@@ -373,7 +373,7 @@ function getPatterns(thisHand = null, thisMinimumPoints = null) {
 	let points = Object.values(patterns).map(pattern => pattern.points);
 	let maxPoints = Math.max(...points);
 	
-	if (maxPoints < minimumPoints) {
+	if (maxPoints < thisMinimumPoints) {
 		return [];
 	}
 	
