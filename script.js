@@ -8,15 +8,19 @@ var sameColorExtra = 4; // extra points given for sets of the same color if they
 
 var autoDraw = false; // whether the script should automatically draw on start and on discard
 var autoRecommend = true; // whether the script should automatically recommend on change
+var measurePerformance = false; // whether the performance should be logged into the console
 
 var allCards = undefined;
 var deck = undefined;
 var hand = undefined;
+var globalPoints = undefined;
 var recommendations = undefined;
+var minimumRecommendations = 1;
 
 var deckElement = document.getElementById('deck');
 var handElement = document.getElementById('hand');
 var recommendElement = document.getElementById('result');
+var pointsElement = document.getElementById('points');
 
 reset();
 
@@ -62,8 +66,10 @@ function cardToElement(card, forDeck = false, drawn = false) {
 	
 	if (!forDeck) {
 		if (recommendations.length > 0 ) {
-			if (recommendations[0].burnedCard && recommendations[0].burnedCard == card.id) {
-				element.classList.add("discard");
+			if (recommendations[0].burnedCard) {
+				if (recommendations[0].burnedCard == card.id) {
+					element.classList.add("discard");
+				}
 			}
 			else if (recommendations[0].cards && recommendations[0].cards.includes(card.id)) {
 				element.classList.add("select");
@@ -112,7 +118,7 @@ function fillHand() {
 	}
 }
 
-function discard(cardId, thisHand = null) {
+function discard(cardId, thisHand = null, update = true) {
 	let handGiven = true;
 	if (thisHand == null) {
 		thisHand = hand;
@@ -127,8 +133,49 @@ function discard(cardId, thisHand = null) {
 		fillHand();
 	}
 	
-	if (!handGiven) {
+	if (!handGiven && update) {
 		updateUI();
+	}
+}
+
+function cashOut(thisHand = null) {
+	if (recommendations.length > 0) {
+		let handGiven = true;
+		if (thisHand == null) {
+			thisHand = hand;
+			handGiven = false;
+		}
+		
+		console.log("Recommendation: ");
+		console.log(recommendations[0]);
+		
+		if (recommendations[0].burnedCard) {
+			console.log("Discarding: " + recommendations[0].burnedCard);
+			discard(recommendations[0].burnedCard, thisHand, false);
+		}
+		else if (recommendations[0].pattern && recommendations[0].cards) {
+			let localPoints = recommendations[0].points;
+			
+			let localCards = [...recommendations[0].cards];
+			
+			// reset recommendations
+			recommendations = [];
+			
+			for (let cardId of localCards) {
+				console.log("Redeeming: " + cardId);
+				discard(cardId, thisHand, false);
+			}
+			
+			globalPoints += localPoints;
+			console.log("Cashed out: " + (localPoints * pointsMultiplier) + " points");
+		}
+		
+		if (!handGiven) {
+			updateUI();
+		}
+	}
+	else {
+		console.log("Nothing to cash out.");
 	}
 }
 
@@ -156,8 +203,7 @@ function drawCard(cardId, thisHand = null, thisDeck = null) {
 
 function recommend() {
 	var cardCount = Object.keys(allCards).length
-	var scale = 6;
-	recommendOfDepth(scale);
+	recommendOfDepth(6);
 	updateUI(true);
 }
 
@@ -194,7 +240,6 @@ function getPatterns(thisHand = null) {
 			
 			let cardIds = [];
 			for (let card of cardsByNumbers[i]) {
-				console.log(card);
 				cardIds.push(cardToId(card));
 			}
 			
@@ -222,6 +267,11 @@ function getPatterns(thisHand = null) {
 		}
 		
 		if (isSeries) {
+			let sameColor = false;
+			if (theseColors.length > 0) {
+				sameColor = true;
+			}
+			
 			let patternName = (i + 1).toString();
 			for (let numberOffset = 1; numberOffset < seriesLength; numberOffset++) {
 				patternName += "-" + (i + numberOffset + 1).toString();
@@ -230,16 +280,30 @@ function getPatterns(thisHand = null) {
 			// "i" is lagging behind, adjustment needed
 			let points = (i + 1);
 			
-			// check if they are of the same color
-			if (theseColors.length > 0) {
+			if (sameColor) {
 				points = ((i + 1) + sameColorExtra);
 				patternName += "*";
+			}
+			
+			// try to regather the cards
+			let allowedColors = theseColors;
+			let gatheredCards = [];
+			if (allowedColors.length < 1) {
+				allowedColors = colors;
+			}
+			for (let numberOffset = 0; numberOffset < seriesLength; numberOffset++) {
+				for (let card of cardsByNumbers[i + numberOffset]) {
+					if (allowedColors.includes(card.color)) {
+						gatheredCards.push(card.id);
+						break;
+					}
+				}
 			}
 			
 			patterns[patternName] = {};
 			patterns[patternName].pattern = patternName;
 			patterns[patternName].points = points;
-			patterns[patternName].cards = [];
+			patterns[patternName].cards = gatheredCards;
 		}
 	}
 	
@@ -260,15 +324,16 @@ function getHandPoints(hand = null) {
 	return { pattern: "none", points: 0 };
 }
 
-function recommendOfDepth(depth = 2) {
-	var t0 = performance.now();
+function recommendOfDepth(depth = 0) {
+	if (measurePerformance) {
+		var t0 = performance.now();
+	}
 	
 	recommendations = [];
 	recommendThrowaway(depth);
 	let current = getHandPoints();
 	if (current.points > 0) {
 		let choice = {
-			burnedCard: "CASH OUT",
 			points: current,
 			chance: 1,
 			points: current.points,
@@ -278,8 +343,10 @@ function recommendOfDepth(depth = 2) {
 		recommendations.unshift(choice);
 	}
 	
-	var t1 = performance.now();
-	console.log("Took " + (t1 - t0) + " milliseconds.");
+	if (measurePerformance) {
+		var t1 = performance.now();
+		console.log("Took " + (t1 - t0) + " milliseconds.");
+	}
 }
 
 function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance = 1, firstDiscarded = null) {
@@ -336,15 +403,32 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 			
 			choice.chance = thisChance
 			recommendations.push(choice);
-			
-			if (depth > 0 && recommendations.length < 1) {
-				recommendThrowaway(depth - 1, hands[choice.index], decks[choice.index], thisChance, choice.burnedCard);
+		}
+	}
+	
+	// compress recommendations
+	if (choices.length > 0) {
+		recommendations = [...new Set(recommendations)];
+		
+		// only allow one recommendation per pattern
+		let newRecs = [];
+		for (let rec of recommendations) {
+			if (!newRecs.map(newRec => newRec.pattern).includes(rec.pattern)) {
+				newRecs.push(rec);
 			}
+		}
+	
+		recommendations = newRecs;
+	}
+	
+	// recursive
+	for (let choice of choices) {	
+		if (depth > 0 && recommendations.length < minimumRecommendations) {
+			recommendThrowaway(depth - 1, hands[choice.index], decks[choice.index], choice.chance, choice.burnedCard);
 		}
 	}
 	
 	if (firstDiscarded == null) {
-		recommendations = [...new Set(recommendations)];
 		recommendations.sort((a, b) => {
 			var place = 0
 			if (a.chance > b.chance) {
@@ -361,10 +445,10 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 			}
 			return place;
 		});
-		let fewer = recommendations.filter(choice => choice.chance >= 0.01);
-		if (fewer.length > 0) {
-			recommendations = fewer;
-		}
+		// let fewer = recommendations.filter(choice => choice.chance >= 0.01);
+		// if (fewer.length > 0) {
+			// recommendations = fewer;
+		// }
 	}
 }
 
@@ -385,7 +469,12 @@ function getRecommendationText(rec) {
 
 function updateUI(skipAuto = false) {
 	if (autoRecommend && !skipAuto) {
-		recommend();
+		if (hand.length >= handSize) {
+			recommend();
+		}
+		else {
+			// recommendations = [];
+		}
 	}
 	recommendationArray = [];
 	for (let recommendation of recommendations) {
@@ -411,9 +500,12 @@ function updateUI(skipAuto = false) {
 			deckElement.innerHTML += cardToElement(card, true, true);
 		}
 	}
+	
+	pointsElement.innerHTML = Math.floor(globalPoints * pointsMultiplier);
 }
 
 function reset() {
+	globalPoints = 0;
 	allCards = {};
 	deck = [];
 	hand = [];

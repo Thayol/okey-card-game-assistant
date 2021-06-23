@@ -29,11 +29,16 @@
 	--yellow-card-background: #c49000;
 	
 	--card-inset-shadow: #000000;
-	--card-border-color: #ffffff;
+	--card-inset-shadow-variant: #ffffff;
+	--card-border: #ffffff;
+	--card-border-variant: #000000;
 	
 	--card-height: 70px;
 	--card-width: 55px;
 	--card-font-size: 30pt;
+	
+	--discard: red;
+	--cash-out: green;
 }
 
 * {
@@ -100,8 +105,11 @@ panel-title {
 	color: var(--text-disabled);
 }
 
-.discard, .select {
-	box-shadow: inset 0 0 50px -10px white, 0 0 10px -6px red;
+.discard {
+	box-shadow: inset 0 0 50px -10px var(--card-inset-shadow-variant), 0 0 6px 2px var(--discard), inset 0 0 10px -4px var(--discard);
+}
+.select {
+	box-shadow: inset 0 0 50px -10px var(--card-inset-shadow-variant), 0 0 6px 2px var(--cash-out), inset 0 0 10px -4px var(--cash-out);
 }
 
 card-container {
@@ -139,11 +147,11 @@ okey-card:hover, okey-card:active {
 }
 
 okey-card[clickable]:not([hand-full]):hover {
-	box-shadow: inset 0 0 50px -10px var(--card-inset-shadow), 0 0 3px 0 var(--card-border-color);
+	box-shadow: inset 0 0 50px -10px var(--card-inset-shadow), 0 0 3px 0 var(--card-border);
 }
 
 okey-card[clickable]:not([hand-full]):active {
-	box-shadow: inset 0 0 50px -10px var(--card-inset-shadow), 0 0 3px 0 var(--card-border-color), inset 0 0 0 100px var(--primary);
+	box-shadow: inset 0 0 50px -10px var(--card-inset-shadow), 0 0 3px 0 var(--card-border), inset 0 0 0 100px var(--primary);
 }
 
 okey-card:not([clickable]):active, okey-card[hand-full]:active {
