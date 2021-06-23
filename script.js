@@ -22,9 +22,10 @@ var allowRedraw = true; // if redrawing a card by hand is allowed (sometimes the
 
 var defaultDepth = 2; // the default depth of search (0 means single-level, 1 means one extra level, 2 means two extra levels)
 
-var minimumRecommendations = 3; // the minimum amount of recommended next steps the script should strive for
+var minimumRecommendations = -1; // the minimum amount of recommended next steps the script should strive for
 var minimumPoints = 4; // the minimum points the script should consider cashing out
 var preferCashOut = true; // whether the default option should be cashing out even if there is a chance of getting a better opportunity
+var greedyAlgorithm = false; // whether the greedy algorithm should be used (never cash out, always discard for better)
 
 
 // fixups (feel free to delete if not needed)
@@ -478,8 +479,13 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 	for (let choice of choices) {
 		let result = getHandPoints(hands[choice.index]);
 		if (result.points > 0) {
-			// choice.points = result.points;
-			choice.points = cashOut(hands[choice.index], result, false);
+			if (greedyAlgorithm) {
+				choice.points = result.points;
+			}
+			else {
+				choice.points = cashOut(hands[choice.index], result, false);
+			}
+			
 			choice.pattern = result.pattern;
 			choice.cards = result.cards;
 			
@@ -496,7 +502,7 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 	
 	// compress recommendations
 	if (choices.length > 0) {
-		// recommendations = [...new Set(recommendations)];
+		recommendations = [...new Set(recommendations)];
 		
 		// only allow one recommendation per pattern
 		let newRecs = [];
@@ -518,7 +524,7 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 	
 	// recursive
 	for (let choice of choices) {
-		if (depth > 0 && recommendations.length < minimumRecommendations) {
+		if (depth > 0 && (minimumRecommendations < 0 || recommendations.length < minimumRecommendations)) {
 			recommendThrowaway(depth - 1, hands[choice.index], decks[choice.index], choice.chance, choice.burnedCard, choice.points);
 		}
 	}
