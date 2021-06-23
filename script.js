@@ -3,8 +3,15 @@ var colors = [ "red", "blue", "yellow" ]; // the available numbers
 var handSize = (colors.length * 2) - 1; // the maximum hand size
 var seriesLength = colors.length; // the minimum required length of series
 var pointsMultiplier = 10; // useless "big number feel" multiplier
+
 var sameNumberExtra = 1; // extra points given for sets of same numbers
+var sameNumberFixed = false; // if this is true, "sameNumberExtra" will be constant instead of additive
+
+var seriesExtra = 0; // extra points given for series
+var seriesFixed = false; // if this is true, "seriesExtra" will be constant instead of additive
+
 var sameColorExtra = 4; // extra points given for sets of the same color if they are in a series
+var sameColorFixed = false; // if this is true, "sameColorExtra" will be constant instead of additive
 
 var autoDraw = false; // whether the script should automatically draw on start and on discard
 var autoRecommend = true; // whether the script should automatically recommend on change
@@ -22,6 +29,9 @@ var deckElement = document.getElementById('deck');
 var handElement = document.getElementById('hand');
 var recommendElement = document.getElementById('result');
 var pointsElement = document.getElementById('points');
+
+sameColorFixed = true; // for some reason the live game does not work like the wiki says
+sameColorExtra = 10; // it gives 100 for 1-2-3* too
 
 reset();
 
@@ -255,6 +265,10 @@ function getPatterns(thisHand = null) {
 			
 			// "i" is lagging behind, adjustment needed
 			let points = (i + 1 + sameNumberExtra)
+			if (sameNumberFixed) {
+				points = sameNumberExtra;
+			}
+			
 			patterns[patternName] = {};
 			patterns[patternName].pattern = patternName;
 			patterns[patternName].points = points;
@@ -288,10 +302,19 @@ function getPatterns(thisHand = null) {
 			}
 			
 			// "i" is lagging behind, adjustment needed
-			let points = (i + 1);
+			let points = (i + 1 + seriesExtra);
+			if (seriesFixed) {
+				points = seriesExtra;
+			}
 			
 			if (sameColor) {
-				points = ((i + 1) + sameColorExtra);
+				if (sameColorFixed) {
+					points = sameColorExtra;
+				}
+				else {
+					points = ((i + 1) + sameColorExtra);
+				}
+				
 				patternName += "*";
 			}
 			
