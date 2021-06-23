@@ -26,7 +26,7 @@
 	</main-panel>
 	<main-panel>
 			<button onclick="reset();">Reset</button>
-			<button onclick="document.getElementById('result').innerHTML = getPatterns();">Analyze</button>
+			<input type="checkbox" onclick="toggleAutoDraw(this)" id="autoDrawToggle" /><label for="autoDrawToggle">Auto-Draw</label>
 			<br>
 			<div style="margin-top: 1.4em;" id="result">?</div>
 	</main-panel>
