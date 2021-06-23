@@ -44,41 +44,45 @@ function idToCard(cardId) {
 }
 
 function cardToElement(card, forDeck = false, drawn = false) {
-	var element = document.createElement("okey-card");
-	element.innerHTML = card.number.toString();
-	
-	if (forDeck) {
-		element.setAttribute("onclick", "drawCard('" + cardToId(card) + "')");
-		if (isHandFull()) {
-			element.setAttribute("hand-full", "");
+	if (card) {
+		var element = document.createElement("okey-card");
+		element.innerHTML = card.number.toString();
+		
+		if (forDeck) {
+			element.setAttribute("onclick", "drawCard('" + cardToId(card) + "')");
+			if (isHandFull()) {
+				element.setAttribute("hand-full", "");
+			}
 		}
-	}
-	else {
-		element.setAttribute("onclick", "discard('" + cardToId(card) + "')");
-	}
-	
-	if (forDeck && drawn) {
-		element.classList.add("drawn-" + card.color);
-	}
-	else {
-		element.classList.add(card.color);
-		element.setAttribute("clickable", "");
-	}
-	
-	if (!forDeck) {
-		if (recommendations.length > 0 ) {
-			if (recommendations[0].burnedCard) {
-				if (recommendations[0].burnedCard == card.id) {
-					element.classList.add("discard");
+		else {
+			element.setAttribute("onclick", "discard('" + cardToId(card) + "')");
+		}
+		
+		if (forDeck && drawn) {
+			element.classList.add("drawn-" + card.color);
+		}
+		else {
+			element.classList.add(card.color);
+			element.setAttribute("clickable", "");
+		}
+		
+		if (!forDeck) {
+			if (recommendations.length > 0 ) {
+				if (recommendations[0].burnedCard) {
+					if (recommendations[0].burnedCard == card.id) {
+						element.classList.add("discard");
+					}
+				}
+				else if (recommendations[0].cards && recommendations[0].cards.includes(card.id)) {
+					element.classList.add("select");
 				}
 			}
-			else if (recommendations[0].cards && recommendations[0].cards.includes(card.id)) {
-				element.classList.add("select");
-			}
 		}
+		
+		return element.outerHTML;
 	}
 	
-	return element.outerHTML;
+	return "";
 }
 
 function isHandFull(thisHand = null) {
@@ -139,7 +143,7 @@ function discard(cardId, thisHand = null, update = true) {
 	}
 }
 
-function cashOut(thisHand = null) {
+function cashOut(thisHand = null, forceRefresh = true) {
 	if (recommendations.length > 0) {
 		let handGiven = true;
 		if (thisHand == null) {
@@ -147,11 +151,7 @@ function cashOut(thisHand = null) {
 			handGiven = false;
 		}
 		
-		// console.log("Recommendation: ");
-		// console.log(recommendations[0]);
-		
 		if (recommendations[0].burnedCard) {
-			// console.log("Discarding: " + recommendations[0].burnedCard);
 			discard(recommendations[0].burnedCard, thisHand, false);
 		}
 		else if (recommendations[0].pattern && recommendations[0].cards) {
@@ -163,20 +163,15 @@ function cashOut(thisHand = null) {
 			recommendations = [];
 			
 			for (let cardId of localCards) {
-				// console.log("Redeeming: " + cardId);
 				discard(cardId, thisHand, false);
 			}
 			
 			globalPoints += localPoints;
-			// console.log("Cashed out: " + (localPoints * pointsMultiplier) + " points");
-		}
-		
-		if (!handGiven) {
-			updateUI();
 		}
 	}
-	else {
-		// console.log("Nothing to do.");
+	
+	if (forceRefresh) {
+		updateUI();
 	}
 }
 
@@ -239,8 +234,10 @@ function getPatterns(thisHand = null) {
 	// fill them with the current hand's cards
 	for (let cardId of thisHand) {
 		let card = idToCard(cardId);
-		cardColorsByNumbers[card.number - 1].push(card.color);
-		cardsByNumbers[card.number - 1].push(card);
+		if (card) {
+			cardColorsByNumbers[card.number - 1].push(card.color);
+			cardsByNumbers[card.number - 1].push(card);
+		}
 	}
 	
 	// check if there are "color" amount of any
@@ -458,10 +455,6 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 			}
 			return place;
 		});
-		// let fewer = recommendations.filter(choice => choice.chance >= 0.01);
-		// if (fewer.length > 0) {
-			// recommendations = fewer;
-		// }
 	}
 }
 
@@ -486,7 +479,7 @@ function updateUI(skipAuto = false) {
 			recommend();
 		}
 		else {
-			// recommendations = [];
+			recommendations = [];
 		}
 	}
 	recommendationArray = [];
