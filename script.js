@@ -9,6 +9,7 @@ var sameColorExtra = 4; // extra points given for sets of the same color if they
 var autoDraw = false; // whether the script should automatically draw on start and on discard
 var autoRecommend = true; // whether the script should automatically recommend on change
 var measurePerformance = false; // whether the performance should be logged into the console
+var allowRedraw = true; // if redrawing a card by hand is allowed (sometimes the real game is bugged and will give dupes)
 
 var allCards = undefined;
 var deck = undefined;
@@ -191,12 +192,24 @@ function drawCard(cardId, thisHand = null, thisDeck = null) {
 		handGiven = false;
 	}
 	
-	if (!isHandFull(thisHand) && thisDeck.includes(cardId)) {
-		thisDeck.splice(thisDeck.indexOf(cardId), 1);
-		thisHand.push(cardId);
-	
-		if (!handGiven) {
-			updateUI();
+	if (!isHandFull(thisHand)) {
+		let allowed = false;
+		if (allowRedraw) {
+			allowed = true;
+		}
+		else {
+			if (thisDeck.includes(cardId)) {
+				allowed = true;
+			}
+		}
+		
+		if (allowed) {
+			thisDeck.splice(thisDeck.indexOf(cardId), 1);
+			thisHand.push(cardId);
+		
+			if (!handGiven) {
+				updateUI();
+			}
 		}
 	}
 }
