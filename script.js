@@ -18,7 +18,13 @@ var sameColorFixed = false; // if this is true, "sameColorExtra" will be constan
 var autoDraw = false; // whether the script should automatically draw on start and on discard
 var autoRecommend = true; // whether the script should automatically recommend on change
 var measurePerformance = false; // whether the performance should be logged into the console
-var allowRedraw = true; // if redrawing a card by hand is allowed (sometimes the real game is bugged and will give dupes)
+var allowRedraw = true; // if redrawing a card by hand is allowed (sometimes the real game is bugged and will give dupes
+
+var defaultDepth = 2; // the default depth of search (0 means single-level, 1 means one extra level, 2 means two extra levels)
+
+var minimumRecommendations = 3; // the minimum amount of recommended next steps the script should strive for
+var minimumPoints = 4; // the minimum points the script should consider cashing out
+var preferCashOut = true; // whether the default option should be cashing out even if there is a chance of getting a better opportunity
 
 
 // fixups (feel free to delete if not needed)
@@ -34,7 +40,6 @@ var deck = undefined;
 var hand = undefined;
 var globalPoints = undefined;
 var recommendations = undefined;
-var minimumRecommendations = 1;
 
 var deckElement = document.getElementById('deck');
 var handElement = document.getElementById('hand');
@@ -161,21 +166,29 @@ function discard(cardId, thisHand = null, update = true) {
 	}
 }
 
-function cashOut(thisHand = null, forceRefresh = true) {
-	if (recommendations.length > 0) {
+function cashOut(thisHand = null, recommendation = null, forceRefresh = true) {
+	let localPoints = 0;
+	
+	if (recommendation == null) {
+		if (recommendations.length > 0) {
+			recommendation = recommendations[0];
+		}
+	}
+	
+	if (recommendation != null) {
 		let handGiven = true;
 		if (thisHand == null) {
 			thisHand = hand;
 			handGiven = false;
 		}
 		
-		if (recommendations[0].burnedCard) {
-			discard(recommendations[0].burnedCard, thisHand, false);
+		if (recommendation.burnedCard) {
+			discard(recommendation.burnedCard, thisHand, false);
 		}
-		else if (recommendations[0].pattern && recommendations[0].cards) {
-			let localPoints = recommendations[0].points;
+		else if (recommendation.pattern && recommendation.cards) {
+			localPoints = recommendation.points;
 			
-			let localCards = [...recommendations[0].cards];
+			localCards = [...recommendation.cards];
 			
 			// reset recommendations
 			recommendations = [];
@@ -184,13 +197,17 @@ function cashOut(thisHand = null, forceRefresh = true) {
 				discard(cardId, thisHand, false);
 			}
 			
-			globalPoints += localPoints;
+			if (!handGiven) {
+				globalPoints += localPoints;
+			}
 		}
 	}
 	
 	if (forceRefresh) {
 		updateUI();
 	}
+	
+	return localPoints;
 }
 
 function drawCard(cardId, thisHand = null, thisDeck = null) {
@@ -229,13 +246,17 @@ function drawCard(cardId, thisHand = null, thisDeck = null) {
 
 function recommend() {
 	var cardCount = Object.keys(allCards).length
-	recommendOfDepth(3);
+	recommendOfDepth(defaultDepth);
 	updateUI(true);
 }
 
-function getPatterns(thisHand = null) {
+function getPatterns(thisHand = null, thisMinimumPoints = null) {
 	if (thisHand == null) {
 		thisHand = hand;
+	}
+	
+	if (thisMinimumPoints == null) {
+		thisMinimumPoints = minimumPoints;
 	}
 	
 	let patterns = {};
@@ -283,6 +304,7 @@ function getPatterns(thisHand = null) {
 			patterns[patternName].cards = cardIds;
 		}
 	}
+	
 	
 	// check if there are series present
 	for (let i = 0; i <= (maxNumber - seriesLength); i++) {
@@ -351,13 +373,17 @@ function getPatterns(thisHand = null) {
 	let points = Object.values(patterns).map(pattern => pattern.points);
 	let maxPoints = Math.max(...points);
 	
+	if (maxPoints < minimumPoints) {
+		return [];
+	}
+	
 	let selectedPatterns = Object.values(patterns).filter(pattern => pattern.points == maxPoints);
 	
 	return selectedPatterns;
 }
 
 function getHandPoints(hand = null) {
-	let patterns = getPatterns(hand);
+	let patterns = getPatterns(hand, 0);
 	if (patterns.length > 0) {
 		return patterns[0];
 	}
@@ -384,13 +410,32 @@ function recommendOfDepth(depth = 0) {
 		recommendations.unshift(choice);
 	}
 	
+	if (!preferCashOut) {
+		recommendations.sort((a, b) => {
+			var place = 0
+			if (a.chance > b.chance) {
+				place -= 1;
+			}
+			else if (a.chance >= b.chance) {
+				place += 1;
+			}
+			if (a.points > b.points) {
+				place -= 10;
+			}
+			else {
+				place += 10;
+			}
+			return place;
+		});
+	}
+	
 	if (measurePerformance) {
 		var t1 = performance.now();
 		console.log("Took " + (t1 - t0) + " milliseconds.");
 	}
 }
 
-function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance = 1, firstDiscarded = null) {
+function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance = 1, firstDiscarded = null, pointsUntilNow = 0) {
 	if (thisHand == null) {
 		thisHand = hand;
 	}
@@ -433,7 +478,8 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 	for (let choice of choices) {
 		let result = getHandPoints(hands[choice.index]);
 		if (result.points > 0) {
-			choice.points = result.points;
+			// choice.points = result.points;
+			choice.points = cashOut(hands[choice.index], result, false);
 			choice.pattern = result.pattern;
 			choice.cards = result.cards;
 			
@@ -443,13 +489,14 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 			}
 			
 			choice.chance = thisChance
+			
 			recommendations.push(choice);
 		}
 	}
 	
 	// compress recommendations
 	if (choices.length > 0) {
-		recommendations = [...new Set(recommendations)];
+		// recommendations = [...new Set(recommendations)];
 		
 		// only allow one recommendation per pattern
 		let newRecs = [];
@@ -462,10 +509,17 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 		recommendations = newRecs;
 	}
 	
+	for (let choice of choices) {
+		if (!choice.points) {
+			choice.points = 0;
+		}
+		choice.points += pointsUntilNow;
+	}
+	
 	// recursive
-	for (let choice of choices) {	
+	for (let choice of choices) {
 		if (depth > 0 && recommendations.length < minimumRecommendations) {
-			recommendThrowaway(depth - 1, hands[choice.index], decks[choice.index], choice.chance, choice.burnedCard);
+			recommendThrowaway(depth - 1, hands[choice.index], decks[choice.index], choice.chance, choice.burnedCard, choice.points);
 		}
 	}
 	
@@ -473,16 +527,16 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 		recommendations.sort((a, b) => {
 			var place = 0
 			if (a.chance > b.chance) {
-				place -= 10;
+				place -= 1;
 			}
 			else if (a.chance >= b.chance) {
-				place += 10;
-			}
-			if (a.points > b.points) {
 				place += 1;
 			}
+			if (a.points > b.points) {
+				place -= 10;
+			}
 			else {
-				place -= 1;
+				place += 10;
 			}
 			return place;
 		});
