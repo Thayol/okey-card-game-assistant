@@ -221,7 +221,7 @@ function drawCard(cardId, thisHand = null, thisDeck = null) {
 
 function recommend() {
 	var cardCount = Object.keys(allCards).length
-	recommendOfDepth(6);
+	recommendOfDepth(3);
 	updateUI(true);
 }
 

@@ -17,6 +17,8 @@ and if you know a better algorithm, feel free to create a pull request or an iss
 
 Open Metin2, enter the Okey Card Game event, then mirror your hand, discards, and cash outs to this program and it will tell you the next mathematically correct step.
 
+If you need custom settings, clone the repository and modify the settings at the beginning of the [script.js](script.js) file.
+
 ## Playing without Metin2
 
 You can play the game without having Metin2 open. Check the "auto-draw" checkbox and cash out with "auto advance."
