@@ -479,10 +479,14 @@ function updateUI(skipAuto = false) {
 	recommendationArray = [];
 	for (let recommendation of recommendations) {
 		recommendationArray.push(getRecommendationText(recommendation));
-		
 	}
 	recommendationArray = [...new Set(recommendationArray)];
-	recommendElement.innerHTML = recommendationArray.join("<br>");
+	if (recommendationArray.length > 0) {
+		recommendElement.innerHTML = recommendationArray.join("<br>");
+	}
+	else {
+		recommendElement.innerHTML = "No recommendation.";
+	}
 	
 	handElement.innerHTML = "";
 	for (let cardId of hand) {
