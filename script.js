@@ -1,3 +1,5 @@
+/* START OF CONFIG */
+
 var maxNumber = 8; // the maximum number on cards (cards always start at one)
 var colors = [ "red", "blue", "yellow" ]; // the available numbers
 var handSize = (colors.length * 2) - 1; // the maximum hand size
@@ -18,6 +20,15 @@ var autoRecommend = true; // whether the script should automatically recommend o
 var measurePerformance = false; // whether the performance should be logged into the console
 var allowRedraw = true; // if redrawing a card by hand is allowed (sometimes the real game is bugged and will give dupes)
 
+
+// fixups (feel free to delete if not needed)
+sameColorFixed = true; // for some reason the live game does not work like the wiki says
+sameColorExtra = 10; // it gives 100 for 1-2-3* too
+
+/* END OF CONFIG */
+
+
+
 var allCards = undefined;
 var deck = undefined;
 var hand = undefined;
@@ -29,9 +40,6 @@ var deckElement = document.getElementById('deck');
 var handElement = document.getElementById('hand');
 var recommendElement = document.getElementById('result');
 var pointsElement = document.getElementById('points');
-
-sameColorFixed = true; // for some reason the live game does not work like the wiki says
-sameColorExtra = 10; // it gives 100 for 1-2-3* too
 
 reset();
 
