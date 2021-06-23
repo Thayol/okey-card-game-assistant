@@ -494,7 +494,8 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 				thisChance = chance * (1/thisDeck.length);
 			}
 			
-			choice.chance = thisChance
+			choice.chance = thisChance;
+			choice.cardSignature = choice.cards.join(" ");
 			
 			recommendations.push(choice);
 		}
@@ -502,17 +503,25 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 	
 	// compress recommendations
 	if (choices.length > 0) {
-		recommendations = [...new Set(recommendations)];
+		// recommendations = [...new Set(recommendations)];
 		
 		// only allow one recommendation per pattern
-		let newRecs = [];
-		for (let rec of recommendations) {
-			if (!newRecs.map(newRec => newRec.pattern).includes(rec.pattern)) {
-				newRecs.push(rec);
-			}
-		}
+		// let newRecs = [];
+		// for (let rec of recommendations) {
+			// if (!newRecs.map(newRec => newRec.pattern).includes(rec.pattern)) {
+				// newRecs.push(rec);
+			// }
+		// }
+		
+		// only allow one recommendation per signature
+		// let newRecs = [];
+		// for (let rec of recommendations) {
+			// if (!newRecs.map(newRec => newRec.cardSignature).includes(rec.cardSignature)) {
+				// newRecs.push(rec);
+			// }
+		// }
 	
-		recommendations = newRecs;
+		// recommendations = newRecs;
 	}
 	
 	for (let choice of choices) {
@@ -569,9 +578,9 @@ function updateUI(skipAuto = false) {
 		if (hand.length >= handSize) {
 			recommend();
 		}
-		else {
-			recommendations = [];
-		}
+		// else {
+			// recommendations = [];
+		// }
 	}
 	recommendationArray = [];
 	for (let recommendation of recommendations) {
