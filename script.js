@@ -23,7 +23,7 @@ var allowRedraw = true; // if redrawing a card by hand is allowed (sometimes the
 var defaultDepth = 2; // the default depth of search (0 means single-level, 1 means one extra level, 2 means two extra levels)
 
 var minimumRecommendations = -1; // the minimum amount of recommended next steps the script should strive for
-var minimumPoints = 4; // the minimum points the script should consider cashing out
+var minimumPoints = 2; // the minimum points the script should consider cashing out
 var preferCashOut = true; // whether the default option should be cashing out even if there is a chance of getting a better opportunity
 var greedyAlgorithm = false; // whether the greedy algorithm should be used (never cash out, always discard for better)
 
