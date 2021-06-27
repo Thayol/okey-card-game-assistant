@@ -12,8 +12,9 @@ var sameNumberFixed = false; // if this is true, "sameNumberExtra" will be const
 var seriesExtra = 0; // extra points given for series
 var seriesFixed = false; // if this is true, "seriesExtra" will be constant instead of additive
 
-var sameColorExtra = 4; // extra points given for sets of the same color if they are in a series
-var sameColorFixed = false; // if this is true, "sameColorExtra" will be constant instead of additive
+// set the "sameColor" to non-fixed and the extra to 4 to reflect the official wiki (for some reason the live game does not work like that)
+var sameColorExtra = 10; // extra points given for sets of the same color if they are in a series
+var sameColorFixed = true; // if this is true, "sameColorExtra" will be constant instead of additive 
 
 var autoDraw = false; // whether the script should automatically draw on start and on discard
 var autoRecommend = true; // whether the script should automatically recommend on change
@@ -26,11 +27,6 @@ var minimumRecommendations = -1; // the minimum amount of recommended next steps
 var minimumPoints = 2; // the minimum points the script should consider cashing out
 var preferCashOut = true; // whether the default option should be cashing out even if there is a chance of getting a better opportunity
 var greedyAlgorithm = false; // whether the greedy algorithm should be used (never cash out, always discard for better)
-
-
-// fixups (feel free to delete if not needed)
-sameColorFixed = true; // for some reason the live game does not work like the wiki says
-sameColorExtra = 10; // it gives 100 for 1-2-3* too
 
 /* END OF CONFIG */
 
