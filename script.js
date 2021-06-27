@@ -398,7 +398,6 @@ function recommendOfDepth(depth = 0) {
 	let current = getHandPoints();
 	if (current.points > 0) {
 		let choice = {
-			points: current,
 			chance: 1,
 			points: current.points,
 			pattern: current.pattern,
