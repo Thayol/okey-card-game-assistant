@@ -42,8 +42,10 @@ var deckElement = document.getElementById('deck');
 var handElement = document.getElementById('hand');
 var recommendElement = document.getElementById('result');
 var pointsElement = document.getElementById('points');
+var autoDrawElement = document.getElementById('autoDrawToggle');
 
 reset();
+toggleAutoDraw(autoDrawElement);
 
 function toggleAutoDraw(element) {
 	if (element.checked) {
@@ -242,7 +244,6 @@ function drawCard(cardId, thisHand = null, thisDeck = null) {
 }
 
 function recommend() {
-	var cardCount = Object.keys(allCards).length
 	recommendOfDepth(defaultDepth);
 	updateUI(true);
 }
