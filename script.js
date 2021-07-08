@@ -474,13 +474,12 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 	
 	for (let choice of choices) {
 		let result = getHandPoints(hands[choice.index]);
+		if (!greedyAlgorithm) {
+			result.points = cashOut(hands[choice.index], result, false);
+		}
+		
 		if (result.points > 0) {
-			if (greedyAlgorithm) {
-				choice.points = result.points;
-			}
-			else {
-				choice.points = cashOut(hands[choice.index], result, false);
-			}
+			choice.points = result.points;
 			
 			choice.pattern = result.pattern;
 			choice.cards = result.cards;
