@@ -476,6 +476,10 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 		let result = getHandPoints(hands[choice.index]);
 		if (!greedyAlgorithm) {
 			result.points = cashOut(hands[choice.index], result, false);
+			if (hands[choice.index].length < handSize) {
+				// create new hands and push all possible permutations
+				// might need a separate loop
+			}
 		}
 		
 		if (result.points > 0) {
@@ -486,7 +490,7 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 			
 			let thisChance = 1;
 			if (thisDeck.length > 0) {
-				thisChance = chance * (1/thisDeck.length);
+				thisChance = chance * (1 / thisDeck.length);
 			}
 			
 			choice.chance = thisChance;
@@ -494,29 +498,6 @@ function recommendThrowaway(depth = 0, thisHand = null, thisDeck = null, chance 
 			
 			recommendations.push(choice);
 		}
-	}
-	
-	// compress recommendations
-	if (choices.length > 0) {
-		// recommendations = [...new Set(recommendations)];
-		
-		// only allow one recommendation per pattern
-		// let newRecs = [];
-		// for (let rec of recommendations) {
-			// if (!newRecs.map(newRec => newRec.pattern).includes(rec.pattern)) {
-				// newRecs.push(rec);
-			// }
-		// }
-		
-		// only allow one recommendation per signature
-		// let newRecs = [];
-		// for (let rec of recommendations) {
-			// if (!newRecs.map(newRec => newRec.cardSignature).includes(rec.cardSignature)) {
-				// newRecs.push(rec);
-			// }
-		// }
-	
-		// recommendations = newRecs;
 	}
 	
 	for (let choice of choices) {
